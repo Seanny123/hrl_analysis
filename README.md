@@ -1,0 +1,1 @@
+Work term report graphics creation
