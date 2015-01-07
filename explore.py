@@ -8,6 +8,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib as mpl
 
+import utils
+
 file_list = []
 filename_list = []
 name_list = []
@@ -21,8 +23,7 @@ for node_type in range(node_types):
 			open("data_%s_easygrid.txt_0.0_%s.txt" %(run_num, node_type),"r").read().split("\n")
 		)
 		filename_list.append("data_%s_easygrid.txt_0.0_%s.txt" %(run_num, node_type))
-		node_name = node_name_list[node_type]
-		name_list.append("%s trial %s" %(node_name, run_num))
+		name_list.append("%s trial %s" %(node_name_list[node_type], run_num))
 
 
 # Should I be using numpy here?
@@ -45,28 +46,7 @@ for fi in range(len(file_list)):
 	disc_list.append(np.zeros((grid_width, grid_height), dtype=np.float64))
 	freq_list.append(np.zeros((grid_width, grid_height), dtype=np.float64))
 	for t in file_list[fi]:
-		if(t != "" and t != "r\n"):
-			res = t.split(" ")
-
-			x_coord = int(float(res[1]) + xoffset)
-			y_coord = int(float(res[2]) + yoffset)
-
-			freq_list[fi][x_coord][y_coord] += 1
-			current_cell = disc_list[fi][x_coord][y_coord]
-
-			# I think we're accidentally colouring previously discovered cells, but I'm having a hard time proving it
-			# Unit test time!
-			if(current_cell < 0.1):
-				disc_count[fi] += 1
-				# state which cell was discoverd
-				# undo the offset
-				x_list.append(x_coord)
-				y_list.append(y_coord)
-				disc_list[fi][x_coord][y_coord] = res[0]
-				# append when this new cell was discovered
-				disc_times[fi].append(res[0])
-print("xmin: %s, xmax %s" %(min(x_list), max(x_list)))
-print("ymin: %s, ymax %s" %(min(y_list), max(y_list)))
+		utils.coverage_collect(t, fi, disc_list, disc_times, disc_count, freq_list)
 
 # Plot the total discovery as "trial 1, trial 2", since there's no reason to hide the data and showing the average would probably be a bit annoying
 fig = plt.figure()
