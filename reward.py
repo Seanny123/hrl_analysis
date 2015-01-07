@@ -87,6 +87,7 @@ grid_width = 20
 grid_height = 20
 
 for group, info in file_info.iteritems():
+	curr_offset = fi*last_length
 	name_list.appnd(info["node_name_list"])
 	for grid, r_lists in info["reward_list"].iteritems():
 
@@ -97,7 +98,7 @@ for group, info in file_info.iteritems():
 				dtype=np.float64
 			)
 			# because otherwise accessing the correct index is painful
-			acc_reward = acc_reward_list[grid][list_index+fi*last_length]
+			acc_reward = acc_reward_list[grid][list_index+curr_offset]
 
 			for line_index in range(len(r_list)):
 				res = r_list[line_index].split(" ")
@@ -105,16 +106,21 @@ for group, info in file_info.iteritems():
 				acc_reward[line_index+1] = acc_reward[line_index] + res[1]
 
 		# now get the average
+		# assuming each file has a uniform number of runs
 		for ai in np.arange(0, len(acc_reward_list[grid])-info["run_nums"], info["run_nums"]):
-			avg_acc[grid].append(np.mean(acc_reward_list[ai:ai+info["run_nums"]]))
+			avg_acc[grid].append(
+				np.mean(
+					acc_reward_list[ai+curr_offset:ai+info["run_nums"]+curr_offset],
+					)
+				)
 
-	# now get the coverage
-	for grid, d_lists in info["data_list"].iteritems():
-		for di, d_list in enumerate(d_lists):
-			disc_list.append(np.zeros((grid_width, grid_height), dtype=np.float64))
-			for data in d_list:
-				# No need to grab the frequency, because that's obviously going to depend on the reward
-				utils.coverage_collect(data, di+(fi*last_length), disc_list, disc_times, disc_count)
+		# now get the coverage
+		for grid, d_lists in info["data_list"].iteritems():
+			for di, d_list in enumerate(d_lists):
+				disc_list.append(np.zeros((grid_width, grid_height), dtype=np.float64))
+				for data in d_list:
+					# No need to grab the frequency, because that's obviously going to depend on the reward
+					utils.coverage_collect(data, di+curr_offset, disc_list, disc_times, disc_count)
 	fi += 1
 	last_length = info["node_types"]*info["run_nums"]
 
